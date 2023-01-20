@@ -233,11 +233,12 @@ class IDMapper:
 		if len(src_ids) == 0:
 			raise ValueError('Input or output ID type not supported by selected sources')
 		out_df = pd.DataFrame([], columns=[src_ids])
-
+		out_df['input'] = id_list
 		for src_id in src_ids:
 			out_df[src_id] = self.get_source(src_id).convert(id_list, id_in, id_out, multi_hits='all' if multi_hits == 'consensus' else multi_hits, df=False)
 
 		if multi_hits == 'consensus':
+
 			out_df['output'] = out_df.apply(lambda x: consensus_elem(x[x != self._fill_value].str.split('|').tolist()),axis=1)
 			#id_list_out = out_df['consensus']
 		else:
@@ -257,7 +258,7 @@ class IDMapper:
 			for src_id in src_ids:
 				out_df.loc[out_df[src_id] != 'N/A', f'{src_id}_hits'] = out_df[src_id].str.split('|').apply(lambda x: len(x))
 				out_df.loc[out_df[src_id] == 'N/A', f'{src_id}_hits'] = 0
-			return out_df
+			return out_df[['input','output'] + [col for col in out_df.columns.tolist() if col not in ['input','output']]]
 		else:
 			if multi_ids:
 				return out_df['output'].tolist()
