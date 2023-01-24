@@ -15,7 +15,9 @@ setup(
 	description='A package to convert gene identifiers between different naming conventions',
 	install_requires=['biothings_client','tqdm','pandas'],
 	long_description = long_description,
-	long_description_content_type = 'text/markdown'
+	long_description_content_type = 'text/markdown',
+	#package_data={'': ['README_pypi.md']},
+	#include_package_data=True
 )
 
 
