@@ -203,8 +203,8 @@ class MyGeneMapper(RemoteSource):
 
 		out_df = output[id_relabel[id_out]].fillna(self._fill_value)
 		out_df = self.filter_multi_hits(out_df, multi_hits)
-
-		out_df = out_df.reindex(id_list).astype(str)
+		out_df = out_df[~out_df.index.duplicated()].reindex(id_list) # to remove duplicated input IDs in query
+		out_df = out_df.astype(str)
 		if df:
 			return out_df
 		else:
@@ -265,20 +265,20 @@ class IDMapper:
 			else:
 				return out_df['output'].tolist()[0]
 
-	def entr2ensg(self, id_list, report=False):
-		return self.convert(id_list, id_in='entr', id_out='ensg', report=report)
+	def entr2ensg(self, id_list, df=False):
+		return self.convert(id_list, id_in='entr', id_out='ensg', df=report)
 
-	def entr2symb(self, id_list, report=False):
-		return self.convert(id_list, id_in='entr', id_out='symb', report=report)
+	def entr2symb(self, id_list, df=False):
+		return self.convert(id_list, id_in='entr', id_out='symb', df=report)
 
-	def ensg2entr(self, id_list, report=False):
-		return self.convert(id_list, id_in='ensg', id_out='entr', report=report)
+	def ensg2entr(self, id_list, df=False):
+		return self.convert(id_list, id_in='ensg', id_out='entr', df=report)
 
-	def ensg2symb(self, id_list, report=False):
-		return self.convert(id_list, id_in='ensg', id_out='symb', report=report)
+	def ensg2symb(self, id_list, df=False):
+		return self.convert(id_list, id_in='ensg', id_out='symb', df=report)
 
-	def symb2entr(self, id_list, report=False):
-		return self.convert(id_list, id_in='symb', id_out='entr', report=report)
+	def symb2entr(self, id_list, df=False):
+		return self.convert(id_list, id_in='symb', id_out='entr', df=report)
 
-	def symb2ensg(self, id_list, report=False):
-		return self.convert(id_list, id_in='symb', id_out='ensg', report=report)
+	def symb2ensg(self, id_list, df=False):
+		return self.convert(id_list, id_in='symb', id_out='ensg', df=report)
