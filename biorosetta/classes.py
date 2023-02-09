@@ -6,6 +6,8 @@ import pickle
 
 lib_folder = os.path.dirname(os.path.realpath(__file__))
 
+
+
 class Source:
 	def __init__(self, source_id, fill_value='N/A'):
 		self.source_id = source_id
@@ -55,6 +57,18 @@ class LocalSource(Source):
 
 
 	def convert(self, id_list, id_in, id_out, multi_hits='first', df=False):
+		'''
+			:param list id_list: List of IDs to map
+			:param str id_in: Input ID type
+			:param str id_out: Output ID type
+			:param str multi_hits: Aggregation method for multi hits. Possible values:
+				- 'first': Returns the first ID returned by each source, and selects the ID from the source with highest priority
+				- 'consensus': Returns the most occurring ID returned by all the sources
+				- 'all': Returns all IDs returned by each source, separated by a pipe ('|') symbol
+			:param bool df: Whether to return a DataFrame with a full reports of the sources responses (True) or just the converted IDs (False)
+			:return: List of IDs if df==True, or DataFrame otherwise
+			:rtype: list or DataFrame
+		'''
 		multi_ids = is_list(id_list)
 		id_list = self.sanitize(id_list, id_in, id_out)
 		out_df = self._lookup[id_in][id_out].reindex(id_list, fill_value=self._fill_value)
@@ -120,6 +134,11 @@ class LocalSource(Source):
 
 class EnsemblBiomartMapper(LocalSource):
 	def __init__(self, data_path=None, symb_aliases=True, fill_value='N/A'):
+		'''
+			:param str data_path: Path where to store the local data for this source (default: internal package folder)
+			:param bool symb_aliases: Whether to download and integrate the symbol aliases and synonyms in the dictionary
+			:param str fill_value: Default value returned when the ID is not found in the source
+		'''
 		if data_path is None:
 			data_path = lib_folder + '/data/ensembl.tsv'
 		cache_path = data_path.replace('.tsv', '.pickle')
@@ -153,6 +172,11 @@ class EnsemblBiomartMapper(LocalSource):
 
 class HGNCBiomartMapper(LocalSource):
 	def __init__(self, data_path=None, symb_aliases=True, fill_value='N/A'):
+		'''
+			:param str data_path: Path where to store the local data for this source (default: internal package folder)
+			:param bool symb_aliases: Whether to download and integrate the symbol aliases and synonyms in the dictionary
+			:param str fill_value: Default value returned when the ID is not found in the source
+		'''
 		if data_path is None:
 			data_path = lib_folder + '/data/hgnc.tsv'
 		cache_path = data_path.replace('.tsv', '.pickle')
@@ -192,9 +216,24 @@ class MyGeneMapper(RemoteSource):
 	mg = get_client('gene')
 
 	def __init__(self, fill_value='N/A'):
+		'''
+			:param str fill_value: Default value returned when the ID is not found in the source
+		'''
 		super().__init__('mygene', fill_value=fill_value)
 
 	def convert(self, id_list, id_in, id_out, multi_hits='first', df=False):
+		'''
+				:param list id_list: List of IDs to map
+				:param str id_in: Input ID type
+				:param str id_out: Output ID type
+				:param str multi_hits: Aggregation method for multi hits. Possible values:
+					- 'first': Returns the first ID returned by each source, and selects the ID from the source with highest priority
+					- 'consensus': Returns the most occurring ID returned by all the sources
+					- 'all': Returns all IDs returned by each source, separated by a pipe ('|') symbol
+				:param bool df: Whether to return a DataFrame with a full reports of the sources responses (True) or just the converted IDs (False)
+				:return: List of IDs if df==True, or DataFrame otherwise
+				:rtype: list or DataFrame
+		'''
 		id_list = self.sanitize(id_list, id_in, id_out)
 
 		id_relabel = {'entr': 'entrezgene', 'symb': 'symbol', 'ensg': 'ensembl.gene', 'ensp':'ensembl.protein', 'hgnc':'HGNC'}
@@ -219,14 +258,59 @@ class MyGeneMapper(RemoteSource):
 
 class IDMapper:
 	def __init__(self, sources):
+		'''
+			:param list or str sources: List of source objects or string with possible values:
+				- 'ensembl_biomart': Ensembl Biomart source (local)
+				- 'hgnc_biomart': HGNC Biomart source (local)
+				- 'mygene': MyGene source (remote)
+				- 'all': All sources with following priority list: [Ensembl Biomart,HGNC Biomart, MyGene]
+				- 'local': All local sources (Ensembl Biomart, HGNC Biomart)
+				- 'remote': All remote sources (MyGene)
+			:return: IDMapper object
+			:rtype: IDMapper
+		'''
+		sources = IDMapper.get_sources(sources)
 		self._sources = make_list(sources)
 		self._src_ids = [src.source_id for src in self._sources]
 		self._fill_value = self._sources[0]._fill_value
+
+	@staticmethod
+	def get_sources(source='all'):
+
+		if isinstance(source, str):
+			if source == 'ensembl_biomart':
+				return [EnsemblBiomartMapper()]
+			elif source == 'hgnc_biomart':
+				return [HGNCBiomartMapper()]
+			elif source == 'mygene':
+				return [MyGeneMapper()]
+			elif source == 'all':
+				return [EnsemblBiomartMapper(), HGNCBiomartMapper(), MyGeneMapper()]
+			elif source == 'local':
+				return [EnsemblBiomartMapper(), HGNCBiomartMapper()]
+			elif source == 'remote':
+				return [MyGeneMapper()]
+			else:
+				raise ValueError(f'Source specified ({source}) is invalid')
+		else:
+			return source
 
 	def get_source(self, source_id):
 		return self._sources[self._src_ids.index(source_id)]
 
 	def convert(self, id_list, id_in, id_out, multi_hits='first', df=False):
+		'''
+			:param list id_list: List of IDs to map
+			:param str id_in: Input ID type
+			:param str id_out: Output ID type
+			:param str multi_hits: Aggregation method for multi hits. Possible values:
+				- 'first': Returns the first ID returned by each source, and selects the ID from the source with highest priority
+				- 'consensus': Returns the most occurring ID returned by all the sources
+				- 'all': Returns all IDs returned by each source, separated by a pipe ('|') symbol
+			:param bool df: Whether to return a DataFrame with a full reports of the sources responses (True) or just the converted IDs (False)
+			:return: List of IDs if df==True, or DataFrame otherwise
+			:rtype: list or DataFrame
+		'''
 		multi_ids = is_list(id_list)
 		id_list = make_list(id_list)
 		src_ids = [src_id for src_id, src in zip(self._src_ids, self._sources) if src.has_id_in_type(id_in) and src.has_id_out_type(id_out)]
@@ -239,7 +323,7 @@ class IDMapper:
 
 		if multi_hits == 'consensus':
 
-			out_df['output'] = out_df.apply(lambda x: consensus_elem(x[x != self._fill_value].str.split('|').tolist()),axis=1)
+			out_df['output'] = out_df[src_ids].apply(lambda x: consensus_elem(x[x != self._fill_value].str.split('|').tolist()),axis=1)
 			#id_list_out = out_df['consensus']
 		else:
 			id_list_out = out_df[src_ids[0]].squeeze(axis=1)
@@ -252,9 +336,9 @@ class IDMapper:
 		out_df.columns = out_df.columns.get_level_values(0)
 		if df:
 			if multi_hits == 'consensus' or multi_hits == 'all':
-				out_df['mismatch'] = out_df.apply(lambda x: no_intersection(x[x != self._fill_value].values),axis=1)
+				out_df['mismatch'] = out_df[src_ids].apply(lambda x: no_intersection(x[x != self._fill_value].values),axis=1)
 			else:
-				out_df['mismatch'] = out_df.apply(lambda x: x[x != self._fill_value].nunique() > 1, axis=1)
+				out_df['mismatch'] = out_df[src_ids].apply(lambda x: x[x != self._fill_value].nunique() > 1, axis=1)
 			for src_id in src_ids:
 				out_df.loc[out_df[src_id] != 'N/A', f'{src_id}_hits'] = out_df[src_id].str.split('|').apply(lambda x: len(x))
 				out_df.loc[out_df[src_id] == 'N/A', f'{src_id}_hits'] = 0
@@ -266,19 +350,19 @@ class IDMapper:
 				return out_df['output'].tolist()[0]
 
 	def entr2ensg(self, id_list, df=False):
-		return self.convert(id_list, id_in='entr', id_out='ensg', df=report)
+		return self.convert(id_list, id_in='entr', id_out='ensg', df=df)
 
 	def entr2symb(self, id_list, df=False):
-		return self.convert(id_list, id_in='entr', id_out='symb', df=report)
+		return self.convert(id_list, id_in='entr', id_out='symb', df=df)
 
 	def ensg2entr(self, id_list, df=False):
-		return self.convert(id_list, id_in='ensg', id_out='entr', df=report)
+		return self.convert(id_list, id_in='ensg', id_out='entr', df=df)
 
 	def ensg2symb(self, id_list, df=False):
-		return self.convert(id_list, id_in='ensg', id_out='symb', df=report)
+		return self.convert(id_list, id_in='ensg', id_out='symb', df=df)
 
 	def symb2entr(self, id_list, df=False):
-		return self.convert(id_list, id_in='symb', id_out='entr', df=report)
+		return self.convert(id_list, id_in='symb', id_out='entr', df=df)
 
 	def symb2ensg(self, id_list, df=False):
-		return self.convert(id_list, id_in='symb', id_out='ensg', df=report)
+		return self.convert(id_list, id_in='symb', id_out='ensg', df=df)

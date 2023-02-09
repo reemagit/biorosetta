@@ -19,21 +19,33 @@ import biorosetta as br
 
 ## Examples
 
+```python
+import biorosetta as br
+```
+
 Single source mapping from ENSG to NCBI ID (entrezgene) with Ensembl Biomart data:
 ```python
-idmap = br.get_mapper([EnsemblBiomartMapper()]) # Single local source
+idmap = br.IDMapper([br.EnsemblBiomartMapper()]) # Single local source
 idmap.convert('ENSG00000159388','ensg','entr')
 ```
 Multiple sources mapping with Ensembl Biomart data, HGNC Biomart data and MyGene data
 ```python
-idmap = br.get_mapper([EnsemblBiomartMapper(),HGNCBiomartMapper(),MyGeneMapper()]) # Multiple sources
+idmap = br.IDMapper([br.EnsemblBiomartMapper(),br.HGNCBiomartMapper(),br.MyGeneMapper()]) # Multiple sources
 idmap.convert('ENSG00000159388','ensg','entr')
 ```
-Multi-gene mapping
+
+Return all ID outputs for each source
 ```python
-idmap = br.get_mapper([EnsemblBiomartMapper(),HGNCBiomartMapper(),MyGeneMapper()]) # Multiple sources
-idmap.convert(['ENSG00000159388','ENSG00000211459','ENSG00000159388'],'ensg','ensp')
+idmap = br.IDMapper([br.EnsemblBiomartMapper(),br.HGNCBiomartMapper(),br.MyGeneMapper()]) # Multiple sources
+idmap.convert(['ENSG00000159388','ENSG00000211459','ENSG00000159388'],'ensg','ensp', multi_hits='all')
 ```
+
+Multi-hits consensus mapping returns the most frequent ID returned across all the sources
+```python
+idmap = br.IDMapper([br.EnsemblBiomartMapper(),br.HGNCBiomartMapper(),br.MyGeneMapper()]) # Multiple sources
+idmap.convert(['ENSG00000159388','ENSG00000211459','ENSG00000159388'],'ensg','ensp', multi_hits='consensus')
+```
+
 
 ## Currently implemented sources and gene identifiers
 
