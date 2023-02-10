@@ -40,6 +40,7 @@ class LocalSource(Source):
 		self._data = data
 		self.init()
 
+
 	def init(self):
 		data = self._data
 		self._lookup = {}
