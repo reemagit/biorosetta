@@ -62,3 +62,6 @@ Gene Identifiers:
 - "ensp": Ensembl protein ID (ENSP, Ensembl Biomart only)
 - "hgnc": HGNC ID (Ensembl Biomart and HGNC Biomart only)
 
+# Acknowledgments
+
+Thanks to David Deritei for the help with design and debugging.
