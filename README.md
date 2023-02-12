@@ -23,6 +23,30 @@ import biorosetta as br
 import biorosetta as br
 ```
 
+List current supported sources and gene ID types:
+```python
+br.list_sources()
+```
+Function output:
+```
+ID types:
+'ensg' = Ensembl gene ID
+'entr' = NCBI gene ID (entrezgene)
+'symb' = Gene symbol
+'ensp' = Ensembl protein ID
+'hgnc' = HGNC ID
+Sources:
+"ensembl_biomart": Ensembl Biomart (http://useast.ensembl.org/biomart/martview) 
+	 ID in: ['ensg', 'entr', 'symb', 'ensp', 'hgnc'] 
+	 ID out: ['ensg', 'entr', 'symb', 'ensp', 'hgnc']
+"hgnc_biomart": HGNC Biomart (https://biomart.genenames.org/) 
+	 ID in: ['ensg', 'entr', 'symb', 'hgnc'] 
+	 ID out: ['ensg', 'entr', 'symb', 'hgnc']
+"mygene": MyGene (https://mygene.info/) 
+	 ID in: ['ensg', 'entr'] 
+	 ID out: ['ensg', 'entr', 'symb']
+```
+
 Single source mapping from ENSG to NCBI ID (entrezgene) with Ensembl Biomart data:
 ```python
 idmap = br.IDMapper([br.EnsemblBiomartMapper()]) # Single local source
@@ -33,6 +57,8 @@ Multiple sources mapping with Ensembl Biomart data, HGNC Biomart data and MyGene
 idmap = br.IDMapper([br.EnsemblBiomartMapper(),br.HGNCBiomartMapper(),br.MyGeneMapper()]) # Multiple sources
 idmap.convert('ENSG00000159388','ensg','entr')
 ```
+
+Note: the order of the sources in the list provided to IDMapper defines the priority of each source in the mapping output.
 
 Return all ID outputs for each source
 ```python
@@ -45,7 +71,6 @@ Multi-hits consensus mapping returns the most frequent ID returned across all th
 idmap = br.IDMapper([br.EnsemblBiomartMapper(),br.HGNCBiomartMapper(),br.MyGeneMapper()]) # Multiple sources
 idmap.convert(['ENSG00000159388','ENSG00000211459','ENSG00000159388'],'ensg','ensp', multi_hits='consensus')
 ```
-
 
 ## Currently implemented sources and gene identifiers
 
@@ -61,6 +86,18 @@ Gene Identifiers:
 - "symb": Gene name (symbol, all sources)
 - "ensp": Ensembl protein ID (ENSP, Ensembl Biomart only)
 - "hgnc": HGNC ID (Ensembl Biomart and HGNC Biomart only)
+
+
+## IDMapper initialization aliases
+
+```python
+idmap = br.IDMapper('all') # equivalent to [br.EnsemblBiomartMapper(),br.HGNCBiomartMapper(),br.MyGeneMapper()]
+idmap = br.IDMapper('local') # equivalent to [br.EnsemblBiomartMapper(),br.HGNCBiomartMapper()]
+idmap = br.IDMapper('remote') # equivalent to [br.MyGeneMapper()]
+idmap = br.IDMapper('ensembl_biomart') # equivalent to [br.EnsemblBiomartMapper()]
+idmap = br.IDMapper('hgnc_biomart') # equivalent to [br.HGNCBiomartMapper()]
+idmap = br.IDMapper('mygene') # equivalent to [br.MyGene()]
+```
 
 # Acknowledgments
 

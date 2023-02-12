@@ -144,7 +144,7 @@ class EnsemblBiomartMapper(LocalSource):
 			data_path = lib_folder + '/data/ensembl.tsv'
 		cache_path = data_path.replace('.tsv', '.pickle')
 		if Path(cache_path).exists():
-			print('- Loading lookup tables from cache')
+			print('- Loading lookup tables from cache (use function EnsemblBiomartMapper.download_data() to force new download)')
 			self.load_cache(cache_path)
 			self.source_id = 'ensembl'
 			self._fill_value = fill_value
@@ -182,7 +182,7 @@ class HGNCBiomartMapper(LocalSource):
 			data_path = lib_folder + '/data/hgnc.tsv'
 		cache_path = data_path.replace('.tsv', '.pickle')
 		if Path(cache_path).exists():
-			print('- Loading lookup tables from cache')
+			print('- Loading lookup tables from cache (use function EnsemblBiomartMapper.download_data() to force new download)')
 			self.load_cache(cache_path)
 			self.source_id = 'hgnc'
 			self._fill_value = fill_value

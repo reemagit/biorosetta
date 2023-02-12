@@ -1,0 +1,14 @@
+LICENSE
+MANIFEST.in
+README.md
+README_pypi.md
+setup.py
+biorosetta/__init__.py
+biorosetta/classes.py
+biorosetta/queries.py
+biorosetta/utils.py
+biorosetta.egg-info/PKG-INFO
+biorosetta.egg-info/SOURCES.txt
+biorosetta.egg-info/dependency_links.txt
+biorosetta.egg-info/requires.txt
+biorosetta.egg-info/top_level.txt
