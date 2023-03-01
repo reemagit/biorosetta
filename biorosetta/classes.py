@@ -140,6 +140,7 @@ class EnsemblBiomartMapper(LocalSource):
 			:param bool symb_aliases: Whether to download and integrate the symbol aliases and synonyms in the dictionary
 			:param str fill_value: Default value returned when the ID is not found in the source
 		'''
+		self._source_label = 'Ensembl Biomart'
 		if data_path is None:
 			data_path = lib_folder + '/data/ensembl.tsv'
 		cache_path = data_path.replace('.tsv', '.pickle')
@@ -178,6 +179,7 @@ class HGNCBiomartMapper(LocalSource):
 			:param bool symb_aliases: Whether to download and integrate the symbol aliases and synonyms in the dictionary
 			:param str fill_value: Default value returned when the ID is not found in the source
 		'''
+		self._source_label = 'HGNC Biomart'
 		if data_path is None:
 			data_path = lib_folder + '/data/hgnc.tsv'
 		cache_path = data_path.replace('.tsv', '.pickle')
@@ -220,6 +222,7 @@ class MyGeneMapper(RemoteSource):
 		'''
 			:param str fill_value: Default value returned when the ID is not found in the source
 		'''
+		self._source_label = 'MyGene'
 		super().__init__('mygene', fill_value=fill_value)
 
 	def convert(self, id_list, id_in, id_out, multi_hits='first', df=False):
@@ -315,6 +318,9 @@ class IDMapper:
 		multi_ids = is_list(id_list)
 		id_list = make_list(id_list)
 		src_ids = [src_id for src_id, src in zip(self._src_ids, self._sources) if src.has_id_in_type(id_in) and src.has_id_out_type(id_out)]
+		if len(src_ids) < len(self._src_ids):
+			print('One or more sources do not support the requested input/output ID type mapping: {}'.format(','.join(src_id for src_id in self._src_ids if src_id not in src_ids)))
+			print('Mapping will be executed using the following source(s): {}'.format(','.join(src_ids)))
 		if len(src_ids) == 0:
 			raise ValueError('Input or output ID type not supported by selected sources')
 		out_df = pd.DataFrame([], columns=[src_ids])
@@ -323,8 +329,13 @@ class IDMapper:
 			out_df[src_id] = self.get_source(src_id).convert(id_list, id_in, id_out, multi_hits='all' if multi_hits == 'consensus' else multi_hits, df=False)
 
 		if multi_hits == 'consensus':
+			def get_consensus(x):
+				if (x != self._fill_value).sum() > 0:
+					return consensus_elem(x[x != self._fill_value].str.split('|').tolist())
+				else:
+					return self._fill_value
 
-			out_df['output'] = out_df[src_ids].apply(lambda x: consensus_elem(x[x != self._fill_value].str.split('|').tolist()),axis=1)
+			out_df['output'] = out_df[src_ids].apply(get_consensus,axis=1)
 			#id_list_out = out_df['consensus']
 		else:
 			id_list_out = out_df[src_ids[0]].squeeze(axis=1)
