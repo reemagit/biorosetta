@@ -3,6 +3,7 @@ from pathlib import Path
 from .utils import *
 import os
 import pickle
+import numpy as np
 
 lib_folder = os.path.dirname(os.path.realpath(__file__))
 
@@ -74,6 +75,8 @@ class LocalSource(Source):
 		id_list = self.sanitize(id_list, id_in, id_out)
 		out_df = self._lookup[id_in][id_out].reindex(id_list, fill_value=self._fill_value)
 		out_df = self.filter_multi_hits(out_df, multi_hits)
+		if self._fill_value == 'passthrough':
+			out_df = pd.Series(np.where(out_df == 'passthrough', out_df.index, out_df.values), index=out_df.index)
 		if df:
 			return out_df
 		else:
@@ -184,7 +187,7 @@ class HGNCBiomartMapper(LocalSource):
 			data_path = lib_folder + '/data/hgnc.tsv'
 		cache_path = data_path.replace('.tsv', '.pickle')
 		if Path(cache_path).exists():
-			print('- Loading lookup tables from cache (use function EnsemblBiomartMapper.download_data() to force new download)')
+			print('- Loading lookup tables from cache (use function HGNCBiomartMapper.download_data() to force new download)')
 			self.load_cache(cache_path)
 			self.source_id = 'hgnc'
 			self._fill_value = fill_value
@@ -244,9 +247,14 @@ class MyGeneMapper(RemoteSource):
 		output = MyGeneMapper.mg.getgenes(id_list, scopes=id_relabel[id_in], fields=id_relabel[id_out],
 									species='human', as_dataframe=True, returnall=False)
 
-		out_df = output[id_relabel[id_out]].fillna(self._fill_value)
-		out_df = self.filter_multi_hits(out_df, multi_hits)
-		out_df = out_df[~out_df.index.duplicated()].reindex(id_list) # to remove duplicated input IDs in query
+		if output.shape[1]==1 and 'notfound' in output.columns:
+			out_df = pd.Series([self._fill_value] * len(id_list), index=id_list)
+		else:
+			out_df = output[id_relabel[id_out]].fillna(self._fill_value)
+			out_df = self.filter_multi_hits(out_df, multi_hits)
+			out_df = out_df[~out_df.index.duplicated()].reindex(id_list) # to remove duplicated input IDs in query
+		if self._fill_value == 'passthrough':
+			out_df = pd.Series(np.where(out_df == 'passthrough', out_df.index, out_df.values), index=out_df.index)
 		out_df = out_df.astype(str)
 		if df:
 			return out_df
@@ -261,7 +269,7 @@ class MyGeneMapper(RemoteSource):
 
 
 class IDMapper:
-	def __init__(self, sources):
+	def __init__(self, sources, fill_value=None):
 		'''
 			:param list or str sources: List of source objects or string with possible values:
 				- 'ensembl_biomart': Ensembl Biomart source (local)
@@ -270,13 +278,24 @@ class IDMapper:
 				- 'all': All sources with following priority list: [Ensembl Biomart,HGNC Biomart, MyGene]
 				- 'local': All local sources (Ensembl Biomart, HGNC Biomart)
 				- 'remote': All remote sources (MyGene)
+			:param str fill_value: Value to return when output ID is not found. 
+				- 'N/A': (Default)
+				- 'passthrough': Return input ID
+				- None: Inherit existing fill values from specified sources
+				- any other string: Return any other string
 			:return: IDMapper object
 			:rtype: IDMapper
 		'''
 		sources = IDMapper.get_sources(sources)
 		self._sources = make_list(sources)
 		self._src_ids = [src.source_id for src in self._sources]
-		self._fill_value = self._sources[0]._fill_value
+		if fill_value is None:
+			self._fill_value = self._sources[0]._fill_value
+		else:
+			self._fill_value = fill_value
+			for i in range(len(self._sources)):
+				self._sources[i]._fill_value = fill_value
+		
 
 	@staticmethod
 	def get_sources(source='all'):
