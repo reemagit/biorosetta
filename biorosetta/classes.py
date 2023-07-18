@@ -342,7 +342,7 @@ class IDMapper:
 			print('Mapping will be executed using the following source(s): {}'.format(','.join(src_ids)))
 		if len(src_ids) == 0:
 			raise ValueError('Input or output ID type not supported by selected sources')
-		out_df = pd.DataFrame([], columns=[src_ids])
+		out_df = pd.DataFrame([], columns=src_ids)
 		out_df['input'] = id_list
 		for src_id in src_ids:
 			out_df[src_id] = self.get_source(src_id).convert(id_list, id_in, id_out, multi_hits='all' if multi_hits == 'consensus' else multi_hits, df=False)

@@ -34,5 +34,5 @@ Gene Identifiers:
 
 ## Usage
 
-See up-to-date documentation and examples at [github repo](https://www.google.com).
+See up-to-date documentation and examples at [github repo](https://github.com/reemagit/biorosetta).
 

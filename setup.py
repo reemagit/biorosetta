@@ -6,7 +6,7 @@ long_description = (this_directory / "README_pypi.md").read_text()
 
 setup(
 	name='biorosetta',
-	version='0.3',
+	version='0.3.1',
 	#packages=find_packages(include=['classes','queries','utils']),
 	packages=['biorosetta'],
 	url='https://github.com/reemagit/biorosetta',
