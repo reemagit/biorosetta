@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: biorosetta
-Version: 0.3
+Version: 0.3.1
 Summary: A package to convert gene identifiers between different naming conventions
 Home-page: https://github.com/reemagit/biorosetta
 Author: Enrico Maiorino
@@ -44,5 +44,5 @@ Gene Identifiers:
 
 ## Usage
 
-See up-to-date documentation and examples at [github repo](https://www.google.com).
+See up-to-date documentation and examples at [github repo](https://github.com/reemagit/biorosetta).
 

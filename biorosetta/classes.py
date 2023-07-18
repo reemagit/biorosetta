@@ -357,12 +357,12 @@ class IDMapper:
 			out_df['output'] = out_df[src_ids].apply(get_consensus,axis=1)
 			#id_list_out = out_df['consensus']
 		else:
-			id_list_out = out_df[src_ids[0]].squeeze(axis=1)
+			id_list_out = out_df[src_ids[0]]
 			for i in range(1, len(src_ids)):
 				idx = id_list_out == self._fill_value
 				if idx.sum().squeeze() == 0:
 					break
-				id_list_out[idx] = out_df.loc[idx, src_ids[i]].squeeze(axis=1)
+				id_list_out[idx] = out_df.loc[idx, src_ids[i]]
 			out_df['output'] = id_list_out
 		out_df.columns = out_df.columns.get_level_values(0)
 		if df:
